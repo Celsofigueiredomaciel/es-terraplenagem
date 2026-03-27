@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Blog — Admin E.S Terraplenagem</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/css/admin.css">
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div style="font-size:2rem">🚜</div>
+    <div class="sidebar-titulo">E.S Admin</div>
+  </div>
+  <nav class="sidebar-nav">
+    <a href="historia.html">📖 Nossa História</a>
+    <a href="produtos.html">📦 Produtos</a>
+    <a href="dashboard.html"     class="nav-item">📊 Dashboard</a>
+    <a href="midias.html"        class="nav-item">📷 Fotos & Vídeos</a>
+    <a href="orcamentos.html"    class="nav-item">📋 Orçamentos</a>
+    <a href="blog-admin.html"    class="nav-item ativo">📝 Blog</a>
+    <a href="configuracoes.html" class="nav-item">⚙️ Configurações</a>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="sidebar-user" id="sidebar-user">Carregando...</div>
+    <button onclick="sair()" class="btn-sair">Sair</button>
+  </div>
+</aside>
+
+<!-- CONTEÚDO -->
+<main class="admin-main">
+  <div class="admin-header">
+    <h1 class="admin-titulo">Blog / Notícias</h1>
+    <button class="btn-salvar" onclick="mostrarFormulario()">✍️ Nova notícia</button>
+  </div>
+
+  <!-- Formulário de criação/edição -->
+  <div id="form-box" style="display:none;background:var(--dark2);padding:2rem;margin-bottom:2rem;border-top:3px solid var(--yellow)">
+    <h2 class="admin-titulo" style="font-size:1.5rem;margin-bottom:1.5rem" id="form-titulo-label">Nova Notícia</h2>
+    <input type="hidden" id="post-id">
+    <div class="form-group">
+      <label>Título *</label>
+      <input type="text" id="p-titulo" placeholder="Título da notícia">
+    </div>
+    <div class="form-group">
+      <label>Resumo</label>
+      <input type="text" id="p-resumo" placeholder="Breve descrição (aparece na listagem)">
+    </div>
+    <div class="form-group">
+      <label>Conteúdo *</label>
+      <textarea id="p-conteudo" style="min-height:250px" placeholder="Escreva o conteúdo completo aqui..."></textarea>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Imagem de capa</label>
+        <input type="file" id="p-capa" accept="image/*" style="padding:8px">
+      </div>
+      <div class="form-group">
+        <label>Publicar agora?</label>
+        <select id="p-publicado">
+          <option value="0">Não (salvar rascunho)</option>
+          <option value="1">Sim (publicar)</option>
+        </select>
+      </div>
+    </div>
+    <div style="display:flex;gap:.5rem;margin-top:.5rem">
+      <button class="btn-salvar" onclick="salvarPost()">💾 Salvar</button>
+      <button class="btn-sec" onclick="fecharFormulario()">Cancelar</button>
+    </div>
+  </div>
+
+  <!-- Lista de posts -->
+  <div class="section-titulo">Posts cadastrados</div>
+  <div class="table-box">
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Título</th>
+          <th>Data</th>
+          <th>Status</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody id="tbody-posts">
+        <tr><td colspan="5" style="text-align:center;color:#555">Carregando...</td></tr>
+      </tbody>
+    </table>
+  </div>
+</main>
+
+<script src="../assets/js/admin.js"></script>
+<script>
+  function mostrarFormulario(post = null) {
+    document.getElementById('form-box').style.display = 'block';
+    document.getElementById('form-titulo-label').textContent = post ? 'Editar Notícia' : 'Nova Notícia';
+    document.getElementById('post-id').value      = post?.id || '';
+    document.getElementById('p-titulo').value     = post?.titulo || '';
+    document.getElementById('p-resumo').value     = post?.resumo || '';
+    document.getElementById('p-conteudo').value   = post?.conteudo || '';
+    document.getElementById('p-publicado').value  = post?.publicado || '0';
+    document.getElementById('form-box').scrollIntoView({ behavior: 'smooth' });
+  }
+
+  function fecharFormulario() {
+    document.getElementById('form-box').style.display = 'none';
+    document.getElementById('post-id').value = '';
+  }
+
+  async function salvarPost() {
+    const titulo   = document.getElementById('p-titulo').value.trim();
+    const conteudo = document.getElementById('p-conteudo').value.trim();
+    if (!titulo || !conteudo) { toast('Título e conteúdo são obrigatórios', 'erro'); return; }
+
+    const id       = document.getElementById('post-id').value;
+    const formData = new FormData();
+    formData.append('titulo',     titulo);
+    formData.append('resumo',     document.getElementById('p-resumo').value);
+    formData.append('conteudo',   conteudo);
+    formData.append('publicado',  document.getElementById('p-publicado').value);
+    const capa = document.getElementById('p-capa').files[0];
+    if (capa) formData.append('capa', capa);
+
+    try {
+      const res = await fetch(id ? `/api/blog/${id}` : '/api/blog', {
+        method:  id ? 'PUT' : 'POST',
+        headers: { Authorization: 'Bearer ' + getToken() },
+        body:    formData
+      });
+      const data = await res.json();
+      if (res.ok) {
+        toast(id ? 'Post atualizado!' : 'Post criado!');
+        fecharFormulario();
+        carregarPosts();
+      } else {
+        toast(data.erro || 'Erro ao salvar', 'erro');
+      }
+    } catch { toast('Erro de conexão', 'erro'); }
+  }
+
+  async function carregarPosts() {
+    const tbody = document.getElementById('tbody-posts');
+    try {
+      const res  = await fetch('/api/blog?apenasPublicados=false', { headers: authHeaders() });
+      const data = await res.json();
+      if (!data.dados?.length) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#555">Nenhum post cadastrado.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = data.dados.map(p => `
+        <tr>
+          <td>#${p.id}</td>
+          <td>${p.titulo}</td>
+          <td>${p.publicado_em ? formatarData(p.publicado_em) : '—'}</td>
+          <td><span class="badge badge-${p.publicado ? 'publicado' : 'rascunho'}">${p.publicado ? 'Publicado' : 'Rascunho'}</span></td>
+          <td style="display:flex;gap:.5rem">
+            <button class="btn-sec" onclick="editarPost(${p.id})">Editar</button>
+            <button class="btn-danger" onclick="excluirPost(${p.id})">Excluir</button>
+          </td>
+        </tr>`).join('');
+    } catch { tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#f55">Erro ao carregar.</td></tr>'; }
+  }
+
+  async function editarPost(id) {
+    try {
+      const res  = await fetch(`/api/blog/${id}`, { headers: authHeaders() });
+      const post = await res.json();
+      mostrarFormulario(post);
+    } catch { toast('Erro ao carregar post', 'erro'); }
+  }
+
+  async function excluirPost(id) {
+    confirmar('Tem certeza que deseja excluir este post?', async () => {
+      try {
+        const res = await fetch(`/api/blog/${id}`, {
+          method: 'DELETE', headers: authHeaders()
+        });
+        if (res.ok) { toast('Post excluído!'); carregarPosts(); }
+        else toast('Erro ao excluir', 'erro');
+      } catch { toast('Erro de conexão', 'erro'); }
+    });
+  }
+
+  carregarPosts();
+</script>
+</body>
+</html>

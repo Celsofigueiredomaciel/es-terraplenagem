@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fotos & Vídeos — Admin E.S Terraplenagem</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/css/admin.css">
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div style="font-size:2rem">🚜</div>
+    <div class="sidebar-titulo">E.S Admin</div>
+  </div>
+  <nav class="sidebar-nav">
+    <a href="historia.html">📖 Nossa História</a>
+    <a href="produtos.html">📦 Produtos</a>
+    <a href="dashboard.html"     class="nav-item">📊 Dashboard</a>
+    <a href="midias.html"        class="nav-item ativo">📷 Fotos & Vídeos</a>
+    <a href="orcamentos.html"    class="nav-item">📋 Orçamentos</a>
+    <a href="blog-admin.html"    class="nav-item">📝 Blog</a>
+    <a href="configuracoes.html" class="nav-item">⚙️ Configurações</a>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="sidebar-user" id="sidebar-user">Carregando...</div>
+    <button onclick="sair()" class="btn-sair">Sair</button>
+  </div>
+</aside>
+
+<!-- CONTEÚDO -->
+<main class="admin-main">
+  <div class="admin-header">
+    <h1 class="admin-titulo">Fotos & Vídeos</h1>
+    <a href="/" target="_blank" class="btn-ver-site">Ver site ao vivo →</a>
+  </div>
+
+  <!-- Upload -->
+  <div class="section-titulo">Enviar nova mídia</div>
+  <div style="background:var(--dark2);padding:2rem;margin-bottom:2rem;border-top:3px solid var(--yellow)">
+    <div class="drop-zone" id="drop-zone"></div>
+
+      <div class="drop-zone-icon">📤</div>
+      <div class="drop-zone-txt">Clique ou arraste fotos e vídeos aqui</div>
+      <div class="drop-zone-sub">JPG, PNG, WEBP, MP4, MOV — máx. 50MB</div>
+    </div>
+    <input type="file" id="input-arquivo" accept="image/*,video/*" style="display:none" onchange="previewArquivo(this)">
+
+    <div id="preview-box" style="display:none;margin-top:1.5rem">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Título *</label>
+          <input type="text" id="f-titulo" placeholder="Ex: Terraplanagem em Belém">
+        </div>
+        <div class="form-group">
+          <label>Categoria</label>
+          <select id="f-categoria">
+            <option value="terraplenagem">Terraplenagem</option>
+            <option value="construcao">Construção Civil</option>
+            <option value="estradas">Estradas</option>
+            <option value="drenagem">Drenagem</option>
+            <option value="institucional">Institucional</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Tipo</label>
+          <select id="f-tipo">
+            <option value="foto">Foto</option>
+            <option value="video">Vídeo</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Destaque no slider?</label>
+          <select id="f-destaque">
+            <option value="0">Não</option>
+            <option value="1">Sim</option>
+          </select>
+        </div>
+      </div>
+      <div id="preview-img-box" style="margin-bottom:1rem"></div>
+      <button class="btn-salvar" onclick="enviarMidia()">📤 Enviar mídia</button>
+      <button class="btn-sec" style="margin-left:.5rem" onclick="cancelarUpload()">Cancelar</button>
+    </div>
+  </div>
+
+  <!-- Grid de mídias -->
+  <div class="section-titulo">Mídias cadastradas</div>
+  <div class="midias-grid" id="midias-grid">
+    <div style="color:#555;padding:2rem">Carregando...</div>
+  </div>
+</main>
+
+<script src="../assets/js/admin.js"></script>
+<script>
+  // ── DRAG & DROP ──
+  const dropZone = document.getElementById('drop-zone');
+  dropZone.addEventListener('click', () => {
+  document.getElementById('input-arquivo').click();
+});
+  dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag'); });
+  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag'));
+  dropZone.addEventListener('drop', e => {
+    e.preventDefault(); dropZone.classList.remove('drag');
+    const file = e.dataTransfer.files[0];
+    if (file) processarArquivo(file);
+  });
+
+  let arquivoSelecionado = null;
+
+  function previewArquivo(input) {
+    if (input.files[0]) processarArquivo(input.files[0]);
+  }
+
+  function processarArquivo(file) {
+    arquivoSelecionado = file;
+    document.getElementById('preview-box').style.display = 'block';
+    document.getElementById('f-tipo').value = file.type.startsWith('video') ? 'video' : 'foto';
+
+    const box = document.getElementById('preview-img-box');
+    if (file.type.startsWith('image')) {
+      const img = document.createElement('img');
+      img.src = URL.createObjectURL(file);
+      img.style.cssText = 'max-height:200px;max-width:100%;object-fit:cover;border:1px solid rgba(255,215,0,.2)';
+      box.innerHTML = ''; box.appendChild(img);
+    } else {
+      box.innerHTML = `<div style="padding:1rem;background:var(--dark);color:#888">🎬 ${file.name}</div>`;
+    }
+  }
+
+  function cancelarUpload() {
+    arquivoSelecionado = null;
+    document.getElementById('preview-box').style.display = 'none';
+    document.getElementById('preview-img-box').innerHTML = '';
+    document.getElementById('input-arquivo').value = '';
+  }
+
+  async function enviarMidia() {
+    if (!arquivoSelecionado) { toast('Selecione um arquivo', 'erro'); return; }
+    const titulo = document.getElementById('f-titulo').value.trim();
+    if (!titulo) { toast('Informe o título', 'erro'); return; }
+
+    const formData = new FormData();
+    formData.append('arquivo',   arquivoSelecionado);
+    formData.append('titulo',    titulo);
+    formData.append('tipo',      document.getElementById('f-tipo').value);
+    formData.append('categoria', document.getElementById('f-categoria').value);
+    formData.append('destaque',  document.getElementById('f-destaque').value);
+
+    try {
+      const res = await fetch('/api/midias', {
+        method: 'POST',
+        headers: { Authorization: 'Bearer ' + getToken() },
+        body: formData
+      });
+      const data = await res.json();
+      if (res.ok) {
+        toast('Mídia enviada com sucesso!');
+        cancelarUpload();
+        carregarMidias();
+      } else {
+        toast(data.erro || 'Erro ao enviar', 'erro');
+      }
+    } catch { toast('Erro de conexão', 'erro'); }
+  }
+
+  // ── CARREGAR MÍDIAS ──
+  async function carregarMidias() {
+    const grid = document.getElementById('midias-grid');
+    try {
+      const res   = await fetch('/api/midias');
+      const items = await res.json();
+      if (!items.length) {
+        grid.innerHTML = '<div style="color:#555;padding:2rem">Nenhuma mídia cadastrada ainda.</div>';
+        return;
+      }
+      grid.innerHTML = items.map(m => `
+        <div class="midia-card">
+          ${m.tipo === 'video'
+            ? `<video src="${m.arquivo}" style="width:100%;aspect-ratio:4/3;object-fit:cover"></video>`
+            : `<img src="${m.arquivo}" alt="${m.titulo}">`
+          }
+          <div class="midia-card-body">
+            <div class="midia-card-titulo">${m.titulo}</div>
+            <div class="midia-card-cat">${m.categoria} · ${m.tipo}</div>
+            <div class="midia-card-actions">
+              <button class="btn-danger" onclick="excluirMidia(${m.id})">Excluir</button>
+              ${m.destaque ? '<span class="badge badge-publicado">Destaque</span>' : ''}
+            </div>
+          </div>
+        </div>`).join('');
+    } catch { grid.innerHTML = '<div style="color:#f55;padding:2rem">Erro ao carregar mídias.</div>'; }
+  }
+
+  async function excluirMidia(id) {
+    confirmar('Tem certeza que deseja excluir esta mídia?', async () => {
+      try {
+        const res = await fetch(`/api/midias/${id}`, {
+          method: 'DELETE', headers: authHeaders()
+        });
+        if (res.ok) { toast('Mídia excluída!'); carregarMidias(); }
+        else toast('Erro ao excluir', 'erro');
+      } catch { toast('Erro de conexão', 'erro'); }
+    });
+  }
+
+  carregarMidias();
+</script>
+</body>
+</html>

@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Produtos — Admin E.S Terraplenagem</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/css/admin.css">
+  <style>
+    .produtos-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1.5rem;
+      margin-top: 1rem;
+    }
+
+    .produto-card {
+      position: relative;
+      border-radius: 8px;
+      overflow: hidden;
+      background: #1a1a1a;
+    }
+
+    .produto-card-img {
+      height: 200px;
+      overflow: hidden;
+      background: #111;
+      position: relative;
+    }
+
+    .produto-card-img img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform .4s;
+    }
+
+    .produto-card:hover .produto-card-img img {
+      transform: scale(1.05);
+    }
+
+    .produto-card-body {
+      padding: 1.1rem;
+      border-bottom: 3px solid var(--yellow);
+    }
+
+    .produto-card-nome {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.2rem;
+      letter-spacing: 2px;
+      color: #FFD700;
+      margin-bottom: .4rem;
+    }
+
+    .produto-card-desc {
+      font-size: .85rem;
+      color: #888;
+      line-height: 1.5;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .produto-card-footer {
+      display: flex;
+      gap: .5rem;
+      padding: .75rem 1.1rem;
+      background: #141414;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .produto-badge {
+      font-size: .72rem;
+      font-weight: 600;
+      letter-spacing: 1px;
+      padding: 3px 10px;
+      border-radius: 20px;
+    }
+
+    .produto-badge.ativo   { background: rgba(76,175,80,.2);  color: #4caf50; }
+    .produto-badge.inativo { background: rgba(244,67,54,.2);  color: #f44336; }
+
+    .produto-ordem {
+      font-size: .8rem;
+      color: #555;
+    }
+
+    /* OVERLAY EDIÇÃO */
+    .edit-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,.92);
+      z-index: 10;
+      display: none;
+      flex-direction: column;
+      padding: 1rem;
+      gap: .6rem;
+      overflow-y: auto;
+    }
+
+    .edit-overlay.aberto { display: flex; }
+
+    .edit-overlay label {
+      font-size: .72rem;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: #666;
+      display: block;
+      margin-bottom: 2px;
+    }
+
+    .edit-overlay input,
+    .edit-overlay textarea {
+      width: 100%;
+      background: rgba(255,255,255,.07);
+      border: 1px solid rgba(255,255,255,.12);
+      color: #fff;
+      border-radius: 4px;
+      padding: .4rem .6rem;
+      font-size: .85rem;
+      font-family: 'Barlow', sans-serif;
+      resize: none;
+    }
+
+    .edit-overlay input:focus,
+    .edit-overlay textarea:focus {
+      outline: none;
+      border-color: #FFD700;
+    }
+
+    .edit-overlay input[type="file"] {
+      padding: .3rem;
+      font-size: .78rem;
+      color: #888;
+    }
+
+    .edit-overlay .preview-mini {
+      width: 100%;
+      height: 70px;
+      object-fit: cover;
+      border-radius: 4px;
+      display: none;
+      margin-top: .25rem;
+    }
+
+    .edit-row { display: flex; gap: .5rem; }
+    .edit-row > div { flex: 1; }
+
+    .edit-overlay-btns {
+      display: flex;
+      gap: .5rem;
+      margin-top: .25rem;
+    }
+
+    .btn-salvar-edit {
+      flex: 1;
+      background: #FFD700;
+      color: #111;
+      font-weight: 700;
+      font-size: .85rem;
+      padding: .45rem;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .btn-cancelar-edit {
+      background: rgba(255,255,255,.08);
+      color: #888;
+      font-size: .85rem;
+      padding: .45rem .75rem;
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .edit-msg {
+      font-size: .78rem;
+      text-align: center;
+      min-height: 1rem;
+    }
+
+    .btns-hover {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      display: flex;
+      gap: .5rem;
+      opacity: 0;
+      transition: opacity .25s;
+      z-index: 5;
+    }
+
+    .produto-card:hover .btns-hover { opacity: 1; }
+
+    .btn-card {
+      font-size: .8rem;
+      font-weight: 600;
+      padding: .45rem .9rem;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: filter .2s;
+    }
+
+    .btn-card:hover { filter: brightness(1.15); }
+    .btn-card.editar  { background: #FFD700; color: #111; }
+    .btn-card.toggle  { background: rgba(255,255,255,.15); color: #fff; border: 1px solid rgba(255,255,255,.3); }
+    .btn-card.deletar { background: rgba(244,67,54,.85); color: #fff; }
+  </style>
+</head>
+<body>
+
+<div class="admin-layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div style="font-size:1.5rem">🏗️</div>
+      <div class="sidebar-logo-txt">E.S Admin</div>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="dashboard.html">📊 Dashboard</a>
+      <a href="midias.html">🖼️ Fotos & Vídeos</a>
+      <a href="historia.html">📖 Nossa História</a>
+      <a href="produtos.html" class="ativo">📦 Produtos</a>
+      <a href="orcamentos.html">📋 Orçamentos</a>
+      <a href="blog-admin.html">📝 Blog</a>
+      <a href="configuracoes.html">⚙️ Configurações</a>
+    </nav>
+    <button class="sidebar-sair" id="btn-sair">🚪 Sair</button>
+  </aside>
+
+  <!-- CONTEÚDO -->
+  <main class="admin-main">
+    <div class="admin-header">
+      <div>
+        <h1>📦 Produtos</h1>
+        <p style="color:#888;margin-top:.25rem">
+          Artefatos de concreto exibidos na seção "Produtos" do site
+        </p>
+      </div>
+    </div>
+
+    <!-- FORMULÁRIO NOVO PRODUTO -->
+    <div class="card" style="margin-bottom:2rem">
+      <h2 style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;
+                 letter-spacing:2px;margin-bottom:1.25rem">➕ Novo Produto</h2>
+      <form id="form-novo" enctype="multipart/form-data">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Nome do produto *</label>
+            <input type="text" name="nome"
+                   placeholder="Ex: Bloco de Vedação 39x19x14" required>
+          </div>
+          <div class="form-group">
+            <label>Ordem (0 = primeiro)</label>
+            <input type="number" name="ordem" value="0" min="0">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Descrição</label>
+          <textarea name="descricao" rows="2"
+                    placeholder="Dimensões, resistência, uso recomendado..."
+                    maxlength="500"></textarea>
+        </div>
+        <div class="form-group">
+          <label>Foto do produto *</label>
+          <input type="file" id="foto-novo" name="foto"
+                 accept="image/jpeg,image/png,image/webp" required>
+          <small style="color:#888">JPG, PNG ou WEBP — máx. 10MB</small>
+          <img id="preview-novo"
+               style="max-height:140px;border-radius:6px;object-fit:cover;
+                      margin-top:.75rem;display:none">
+        </div>
+        <div style="display:flex;gap:1rem;align-items:center;margin-top:1rem">
+          <button type="submit" class="btn-admin btn-primary">💾 Salvar Produto</button>
+          <span id="msg-novo" style="font-size:.9rem"></span>
+        </div>
+      </form>
+    </div>
+
+    <!-- LISTA DE PRODUTOS -->
+    <div class="card">
+      <h2 style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;
+                 letter-spacing:2px;margin-bottom:1.25rem">🗂️ Produtos Cadastrados</h2>
+      <div class="produtos-grid" id="lista-produtos">
+        <p style="color:#888">Carregando...</p>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+const TOKEN = localStorage.getItem('es_token');
+if (!TOKEN) location.href = '/admin/login.html';
+
+document.getElementById('btn-sair').onclick = () => {
+  localStorage.removeItem('es_token');
+  location.href = '/admin/login.html';
+};
+
+// preview foto — novo
+document.getElementById('foto-novo').addEventListener('change', function () {
+  const prev = document.getElementById('preview-novo');
+  if (!this.files[0]) return;
+  const reader = new FileReader();
+  reader.onload = e => { prev.src = e.target.result; prev.style.display = 'block'; };
+  reader.readAsDataURL(this.files[0]);
+});
+
+// ── SALVAR NOVO ──────────────────────────────────────
+document.getElementById('form-novo').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const msg = document.getElementById('msg-novo');
+  const btn = e.target.querySelector('button[type=submit]');
+  btn.disabled = true; btn.textContent = 'Salvando...';
+
+  try {
+    const res  = await fetch('/api/produtos', {
+      method: 'POST',
+      headers: { Authorization: 'Bearer ' + TOKEN },
+      body: new FormData(e.target)
+    });
+    const json = await res.json();
+    if (res.ok) {
+      msg.style.color = '#4caf50';
+      msg.textContent = '✅ ' + json.mensagem;
+      e.target.reset();
+      document.getElementById('preview-novo').style.display = 'none';
+      carregarProdutos();
+    } else {
+      msg.style.color = '#f44336';
+      msg.textContent = '❌ ' + (json.erro || 'Erro ao salvar');
+    }
+  } catch {
+    msg.style.color = '#f44336';
+    msg.textContent = '❌ Sem conexão com o servidor';
+  }
+  btn.disabled = false; btn.textContent = '💾 Salvar Produto';
+});
+
+// ── CARREGAR LISTA ───────────────────────────────────
+async function carregarProdutos() {
+  const lista = document.getElementById('lista-produtos');
+  try {
+    const res  = await fetch('/api/produtos/admin', {
+      headers: { Authorization: 'Bearer ' + TOKEN }
+    });
+    const data = await res.json();
+
+    if (!data.length) {
+      lista.innerHTML = '<p style="color:#888;grid-column:1/-1">Nenhum produto cadastrado ainda.</p>';
+      return;
+    }
+
+    lista.innerHTML = data.map(p => `
+      <div class="produto-card" id="card-${p.id}">
+
+        <div class="produto-card-img">
+          <img src="${p.arquivo}" alt="${p.nome}">
+          <!-- botões no hover -->
+          <div class="btns-hover">
+            <button class="btn-card editar"  onclick="abrirEdicao(${p.id})">✏️ Editar</button>
+            <button class="btn-card toggle"  onclick="toggleAtivo(${p.id}, ${p.ativo})">
+              ${p.ativo ? 'Desativar' : 'Ativar'}
+            </button>
+            <button class="btn-card deletar" onclick="remover(${p.id})">🗑️</button>
+          </div>
+        </div>
+
+        <div class="produto-card-body">
+          <div class="produto-card-nome">${p.nome}</div>
+          <div class="produto-card-desc">${p.descricao || '<em style="color:#555">sem descrição</em>'}</div>
+        </div>
+
+        <div class="produto-card-footer">
+          <span class="produto-badge ${p.ativo ? 'ativo' : 'inativo'}">
+            ${p.ativo ? '● Ativo' : '● Inativo'}
+          </span>
+          <span class="produto-ordem">Ordem: ${p.ordem}</span>
+        </div>
+
+        <!-- OVERLAY DE EDIÇÃO -->
+        <div class="edit-overlay" id="edit-${p.id}">
+          <div class="edit-row">
+            <div>
+              <label>Nome</label>
+              <input type="text" id="en-${p.id}" value="${p.nome}">
+            </div>
+            <div style="max-width:70px">
+              <label>Ordem</label>
+              <input type="number" id="eo-${p.id}" value="${p.ordem}" min="0">
+            </div>
+          </div>
+          <div>
+            <label>Descrição</label>
+            <textarea id="ed-${p.id}" rows="3" maxlength="500">${p.descricao || ''}</textarea>
+          </div>
+          <div>
+            <label>Trocar foto (opcional)</label>
+            <input type="file" id="ef-${p.id}"
+                   accept="image/jpeg,image/png,image/webp"
+                   onchange="previewEdicao(this, ${p.id})">
+            <img id="ep-${p.id}" class="preview-mini">
+          </div>
+          <div class="edit-overlay-btns">
+            <button class="btn-salvar-edit" onclick="salvarEdicao(${p.id})">💾 Salvar</button>
+            <button class="btn-cancelar-edit" onclick="fecharEdicao(${p.id})">Cancelar</button>
+          </div>
+          <div class="edit-msg" id="em-${p.id}"></div>
+        </div>
+
+      </div>`).join('');
+
+  } catch {
+    lista.innerHTML = '<p style="color:#f44336;grid-column:1/-1">Erro ao carregar produtos.</p>';
+  }
+}
+
+// ── EDIÇÃO ───────────────────────────────────────────
+function abrirEdicao(id) {
+  document.getElementById('edit-' + id).classList.add('aberto');
+}
+
+function fecharEdicao(id) {
+  document.getElementById('edit-' + id).classList.remove('aberto');
+  document.getElementById('em-' + id).textContent = '';
+}
+
+function previewEdicao(input, id) {
+  const prev = document.getElementById('ep-' + id);
+  if (!input.files[0]) return;
+  const reader = new FileReader();
+  reader.onload = e => { prev.src = e.target.result; prev.style.display = 'block'; };
+  reader.readAsDataURL(input.files[0]);
+}
+
+async function salvarEdicao(id) {
+  const msg = document.getElementById('em-' + id);
+  const fd  = new FormData();
+  fd.append('nome',     document.getElementById('en-' + id).value);
+  fd.append('descricao', document.getElementById('ed-' + id).value);
+  fd.append('ordem',    document.getElementById('eo-' + id).value);
+
+  const fotoInput = document.getElementById('ef-' + id);
+  if (fotoInput.files[0]) fd.append('foto', fotoInput.files[0]);
+
+  try {
+    const res  = await fetch('/api/produtos/' + id, {
+      method: 'PUT',
+      headers: { Authorization: 'Bearer ' + TOKEN },
+      body: fd
+    });
+    const json = await res.json();
+    if (res.ok) {
+      msg.style.color = '#4caf50';
+      msg.textContent = '✅ Salvo!';
+      setTimeout(() => { fecharEdicao(id); carregarProdutos(); }, 800);
+    } else {
+      msg.style.color = '#f44336';
+      msg.textContent = '❌ ' + (json.erro || 'Erro');
+    }
+  } catch {
+    msg.style.color = '#f44336';
+    msg.textContent = '❌ Sem conexão';
+  }
+}
+
+// ── TOGGLE / REMOVER ─────────────────────────────────
+async function toggleAtivo(id, ativoAtual) {
+  await fetch('/api/produtos/' + id, {
+    method: 'PUT',
+    headers: { Authorization: 'Bearer ' + TOKEN, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ativo: ativoAtual ? 0 : 1 })
+  });
+  carregarProdutos();
+}
+
+async function remover(id) {
+  if (!confirm('Remover este produto permanentemente?')) return;
+  await fetch('/api/produtos/' + id, {
+    method: 'DELETE',
+    headers: { Authorization: 'Bearer ' + TOKEN }
+  });
+  carregarProdutos();
+}
+
+carregarProdutos();
+</script>
+</body>
+</html>

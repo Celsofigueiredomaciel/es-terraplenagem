@@ -1,0 +1,14 @@
+# Sensível — NUNCA subir
+backend/.env
+backend/uploads/
+
+# Dependências
+backend/node_modules/
+frontend/node_modules/
+
+# Build
+backend/dist/
+
+# Sistema
+.DS_Store
+Thumbs.db

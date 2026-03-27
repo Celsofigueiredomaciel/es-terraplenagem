@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard — Admin E.S Terraplenagem</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/css/admin.css">
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div style="font-size:2rem">🚜</div>
+    <div class="sidebar-titulo">E.S Admin</div>
+  </div>
+  <nav class="sidebar-nav">
+    <a href="historia.html">📖 Nossa História</a>
+    <a href="dashboard.html"     class="nav-item ativo">📊 Dashboard</a>
+    <a href="midias.html"        class="nav-item">📷 Fotos & Vídeos</a>
+    <a href="produtos.html">📦 Produtos</a>
+    <a href="orcamentos.html"    class="nav-item">📋 Orçamentos</a>
+    <a href="blog-admin.html"    class="nav-item">📝 Blog</a>
+    <a href="configuracoes.html" class="nav-item">⚙️ Configurações</a>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="sidebar-user" id="sidebar-user">Carregando...</div>
+    <button onclick="sair()" class="btn-sair">Sair</button>
+  </div>
+</aside>
+
+<!-- CONTEÚDO -->
+<main class="admin-main">
+  <div class="admin-header">
+    <h1 class="admin-titulo">Dashboard</h1>
+    <a href="/" target="_blank" class="btn-ver-site">Ver site ao vivo →</a>
+  </div>
+
+  <!-- Cards de resumo -->
+  <div class="cards-grid">
+    <div class="card">
+      <div class="card-icon">📋</div>
+      <div class="card-info">
+        <div class="card-num" id="total-orcamentos">—</div>
+        <div class="card-label">Total Orçamentos</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-icon">🔔</div>
+      <div class="card-info">
+        <div class="card-num" id="orcamentos-novos">—</div>
+        <div class="card-label">Novos (sem resposta)</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-icon">📷</div>
+      <div class="card-info">
+        <div class="card-num" id="total-midias">—</div>
+        <div class="card-label">Fotos & Vídeos</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-icon">📝</div>
+      <div class="card-info">
+        <div class="card-num" id="total-posts">—</div>
+        <div class="card-label">Posts publicados</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Ações rápidas -->
+  <div class="section-titulo" style="margin-top:2rem">Ações Rápidas</div>
+  <div class="acoes-grid">
+    <a href="midias.html" class="acao-card">
+      <div class="acao-icon">📤</div>
+      <div class="acao-txt">Enviar foto ou vídeo</div>
+    </a>
+    <a href="orcamentos.html" class="acao-card">
+      <div class="acao-icon">📋</div>
+      <div class="acao-txt">Ver orçamentos</div>
+    </a>
+    <a href="blog-admin.html" class="acao-card">
+      <div class="acao-icon">✍️</div>
+      <div class="acao-txt">Escrever notícia</div>
+    </a>
+    <a href="configuracoes.html" class="acao-card">
+      <div class="acao-icon">⚙️</div>
+      <div class="acao-txt">Editar dados do site</div>
+    </a>
+  </div>
+
+  <!-- Últimos orçamentos -->
+  <div class="section-titulo" style="margin-top:2.5rem">Últimos Orçamentos</div>
+  <div class="table-box">
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>Nome</th>
+          <th>Serviço</th>
+          <th>Data</th>
+          <th>Status</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="tbody-orcamentos">
+        <tr><td colspan="5" style="text-align:center;color:#555">Carregando...</td></tr>
+      </tbody>
+    </table>
+  </div>
+</main>
+
+<script src="../assets/js/admin.js"></script>
+<script>
+  async function carregarDashboard() {
+    const h = authHeaders();
+    try {
+      const [orc, midias, posts, novos] = await Promise.all([
+        fetch('/api/orcamentos?limite=5', { headers: h }).then(r => r.json()),
+        fetch('/api/midias').then(r => r.json()),
+        fetch('/api/blog?apenasPublicados=false', { headers: h }).then(r => r.json()),
+        fetch('/api/orcamentos?status=novo&limite=1', { headers: h }).then(r => r.json()),
+      ]);
+
+      document.getElementById('total-orcamentos').textContent = orc.total || 0;
+      document.getElementById('orcamentos-novos').textContent = novos.total || 0;
+      document.getElementById('total-midias').textContent     = midias.length || 0;
+      document.getElementById('total-posts').textContent      = posts.total || 0;
+
+      const tbody = document.getElementById('tbody-orcamentos');
+      if (orc.dados?.length) {
+        tbody.innerHTML = orc.dados.map(o => `
+          <tr>
+            <td>${o.nome}</td>
+            <td>${o.servico}</td>
+            <td>${formatarData(o.criado_em)}</td>
+            <td><span class="badge badge-${o.status}">${o.status.replace('_',' ')}</span></td>
+            <td><a href="orcamentos.html" style="color:var(--yellow);font-size:.8rem">Ver →</a></td>
+          </tr>`).join('');
+      } else {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#555">Nenhum orçamento ainda</td></tr>';
+      }
+    } catch(e) { console.warn(e); }
+  }
+
+  carregarDashboard();
+</script>
+</body>
+</html>

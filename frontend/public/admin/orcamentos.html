@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Orçamentos — Admin E.S Terraplenagem</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/css/admin.css">
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div style="font-size:2rem">🚜</div>
+    <div class="sidebar-titulo">E.S Admin</div>
+  </div>
+  <nav class="sidebar-nav">
+    <a href="historia.html">📖 Nossa História</a>
+    <a href="produtos.html">📦 Produtos</a>
+    <a href="dashboard.html"     class="nav-item">📊 Dashboard</a>
+    <a href="midias.html"        class="nav-item">📷 Fotos & Vídeos</a>
+    <a href="orcamentos.html"    class="nav-item ativo">📋 Orçamentos</a>
+    <a href="blog-admin.html"    class="nav-item">📝 Blog</a>
+    <a href="configuracoes.html" class="nav-item">⚙️ Configurações</a>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="sidebar-user" id="sidebar-user">Carregando...</div>
+    <button onclick="sair()" class="btn-sair">Sair</button>
+  </div>
+</aside>
+
+<!-- CONTEÚDO -->
+<main class="admin-main">
+  <div class="admin-header">
+    <h1 class="admin-titulo">Orçamentos</h1>
+    <a href="/" target="_blank" class="btn-ver-site">Ver site ao vivo →</a>
+  </div>
+
+  <div class="admin-header">
+  <h1 class="admin-titulo">Orçamentos</h1>
+  <div style="display:flex;gap:.75rem;align-items:center">
+    <!-- NOVO -->
+    <button class="btn-sec" onclick="limparAntigos()"
+            style="border-color:#f44336;color:#f44336">
+      🗑️ Limpar antigos
+    </button>
+    <a href="/" target="_blank" class="btn-ver-site">Ver site ao vivo →</a>
+  </div>
+</div>
+
+  <!-- Filtros -->
+  <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1.5rem">
+    <button class="btn-sec ativo-filtro" onclick="filtrar('')">Todos</button>
+    <button class="btn-sec" onclick="filtrar('novo')">🔔 Novos</button>
+    <button class="btn-sec" onclick="filtrar('em_analise')">🔍 Em análise</button>
+    <button class="btn-sec" onclick="filtrar('respondido')">✅ Respondidos</button>
+    <button class="btn-sec" onclick="filtrar('cancelado')">❌ Cancelados</button>
+  </div>
+
+  <!-- Tabela -->
+  <div class="table-box">
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Nome</th>
+          <th>Telefone</th>
+          <th>Serviço</th>
+          <th>Data</th>
+          <th>Status</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody id="tbody-orcamentos">
+        <tr><td colspan="7" style="text-align:center;color:#555">Carregando...</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Detalhe do orçamento -->
+  <div id="detalhe-box" style="display:none;margin-top:2rem;background:var(--dark2);padding:2rem;border-top:3px solid var(--yellow)">
+    <h2 class="admin-titulo" style="font-size:1.5rem;margin-bottom:1.5rem">Detalhes do Orçamento</h2>
+    <div id="detalhe-conteudo"></div>
+    <div style="margin-top:1.5rem">
+      <div class="form-group">
+        <label>Alterar status</label>
+        <select id="novo-status">
+          <option value="novo">Novo</option>
+          <option value="em_analise">Em análise</option>
+          <option value="respondido">Respondido</option>
+          <option value="cancelado">Cancelado</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Notas internas</label>
+        <textarea id="notas-admin" placeholder="Anotações sobre este orçamento..."></textarea>
+      </div>
+      <button class="btn-salvar" onclick="salvarStatus()">💾 Salvar</button>
+      <button class="btn-sec" style="margin-left:.5rem" onclick="fecharDetalhe()">Fechar</button>
+      <button onclick="excluirOrcamento()"style="margin-left:.5rem;background:#f44336;color:#fff;border:none;padding:.6rem 1.2rem;cursor:pointer;font-weight:600">🗑️ Excluir</button>
+    </div>
+  </div>
+</main>
+
+<script src="../assets/js/admin.js"></script>
+<script>
+  let orcamentoAtual = null;
+  let filtroAtual = '';
+
+  // ── EXCLUIR UNITÁRIO ──────────────────────────────────
+async function excluirOrcamento() {
+  if (!orcamentoAtual) return;
+  if (!confirm(`Excluir permanentemente o orçamento de "${orcamentoAtual.nome}"?\nEsta ação não pode ser desfeita.`)) return;
+  try {
+    const res = await fetch(`/api/orcamentos/${orcamentoAtual.id}`, {
+      method: 'DELETE',
+      headers: authHeaders()
+    });
+    const json = await res.json();
+    if (res.ok) {
+      toast(json.mensagem);
+      fecharDetalhe();
+      carregarOrcamentos(filtroAtual);
+    } else {
+      toast(json.erro || 'Erro ao excluir', 'erro');
+    }
+  } catch { toast('Erro de conexão', 'erro'); }
+}
+
+// ── EXCLUIR POR PERÍODO ──────────────────────────────
+async function limparAntigos() {
+  const meses = prompt('Excluir orçamentos mais antigos que quantos meses?', '6');
+  if (!meses || isNaN(meses) || meses < 1) return;
+  if (!confirm(`Excluir PERMANENTEMENTE todos os orçamentos com mais de ${meses} meses?\nEsta ação não pode ser desfeita.`)) return;
+  try {
+    const res  = await fetch(`/api/orcamentos/periodo/${meses}`, {
+      method: 'DELETE',
+      headers: authHeaders()
+    });
+    const json = await res.json();
+    if (res.ok) {
+      toast(json.mensagem);
+      carregarOrcamentos(filtroAtual);
+    } else {
+      toast(json.erro || 'Erro ao excluir', 'erro');
+    }
+  } catch { toast('Erro de conexão', 'erro'); }
+}
+
+  async function carregarOrcamentos(status = '') {
+    const tbody = document.getElementById('tbody-orcamentos');
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#555">Carregando...</td></tr>';
+    try {
+      const url = status ? `/api/orcamentos?status=${status}` : '/api/orcamentos';
+      const res  = await fetch(url, { headers: authHeaders() });
+      const data = await res.json();
+
+      if (!data.dados?.length) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#555">Nenhum orçamento encontrado.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = data.dados.map(o => `
+        <tr>
+          <td>#${o.id}</td>
+          <td>${o.nome}</td>
+          <td><a href="tel:${o.telefone}" style="color:var(--yellow)">${o.telefone}</a></td>
+          <td>${o.servico}</td>
+          <td>${formatarData(o.criado_em)}</td>
+          <td><span class="badge badge-${o.status}">${o.status.replace('_',' ')}</span></td>
+          <td>
+            <button class="btn-sec" onclick="verDetalhe(${o.id})">Ver</button>
+          </td>
+        </tr>`).join('');
+    } catch { tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#f55">Erro ao carregar.</td></tr>'; }
+  }
+
+  async function verDetalhe(id) {
+    try {
+      const res  = await fetch(`/api/orcamentos/${id}`, { headers: authHeaders() });
+      const o    = await res.json();
+      orcamentoAtual = o;
+
+      document.getElementById('detalhe-conteudo').innerHTML = `
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem">
+          <div><div class="ci-label">Nome</div><div style="color:#fff;font-weight:600">${o.nome}</div></div>
+          <div><div class="ci-label">Telefone</div><div style="color:#fff;font-weight:600">${o.telefone}</div></div>
+          <div><div class="ci-label">E-mail</div><div style="color:#fff">${o.email || '—'}</div></div>
+          <div><div class="ci-label">Serviço</div><div style="color:#fff">${o.servico}</div></div>
+          <div><div class="ci-label">Data</div><div style="color:#fff">${formatarData(o.criado_em)}</div></div>
+          <div><div class="ci-label">Status atual</div><span class="badge badge-${o.status}">${o.status.replace('_',' ')}</span></div>
+        </div>
+        <div class="ci-label">Descrição do projeto</div>
+        <div style="background:var(--dark);padding:1rem;color:#ccc;line-height:1.7;margin-top:.5rem">${o.descricao}</div>`;
+
+      document.getElementById('novo-status').value  = o.status;
+      document.getElementById('notas-admin').value  = o.notas_admin || '';
+      document.getElementById('detalhe-box').style.display = 'block';
+      document.getElementById('detalhe-box').scrollIntoView({ behavior: 'smooth' });
+    } catch { toast('Erro ao carregar detalhes', 'erro'); }
+  }
+
+  async function salvarStatus() {
+    if (!orcamentoAtual) return;
+    try {
+      const res = await fetch(`/api/orcamentos/${orcamentoAtual.id}`, {
+        method: 'PUT', headers: authHeaders(),
+        body: JSON.stringify({
+          status:      document.getElementById('novo-status').value,
+          notas_admin: document.getElementById('notas-admin').value
+        })
+      });
+      if (res.ok) {
+        toast('Status atualizado!');
+        fecharDetalhe();
+        carregarOrcamentos(filtroAtual);
+      } else toast('Erro ao salvar', 'erro');
+    } catch { toast('Erro de conexão', 'erro'); }
+  }
+
+  function fecharDetalhe() {
+    document.getElementById('detalhe-box').style.display = 'none';
+    orcamentoAtual = null;
+  }
+
+  function filtrar(status) {
+    filtroAtual = status;
+    carregarOrcamentos(status);
+  }
+
+  carregarOrcamentos();
+</script>
+</body>
+</html>

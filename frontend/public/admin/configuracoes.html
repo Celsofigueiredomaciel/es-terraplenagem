@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Configurações — Admin E.S Terraplenagem</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/css/admin.css">
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div style="font-size:2rem">🚜</div>
+    <div class="sidebar-titulo">E.S Admin</div>
+  </div>
+  <nav class="sidebar-nav">
+    <a href="historia.html">📖 Nossa História</a>
+    <a href="produtos.html">📦 Produtos</a>
+    <a href="dashboard.html"     class="nav-item">📊 Dashboard</a>
+    <a href="midias.html"        class="nav-item">📷 Fotos & Vídeos</a>
+    <a href="orcamentos.html"    class="nav-item">📋 Orçamentos</a>
+    <a href="blog-admin.html"    class="nav-item">📝 Blog</a>
+    <a href="configuracoes.html" class="nav-item ativo">⚙️ Configurações</a>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="sidebar-user" id="sidebar-user">Carregando...</div>
+    <button onclick="sair()" class="btn-sair">Sair</button>
+  </div>
+</aside>
+
+<!-- CONTEÚDO -->
+<main class="admin-main">
+  <div class="admin-header">
+    <h1 class="admin-titulo">Configurações</h1>
+    <a href="/" target="_blank" class="btn-ver-site">Ver site ao vivo →</a>
+  </div>
+
+  <!-- Contato -->
+  <div class="section-titulo">Dados de Contato</div>
+  <div style="background:var(--dark2);padding:2rem;margin-bottom:2rem;border-top:3px solid var(--yellow)">
+    <div class="form-row">
+      <div class="form-group">
+        <label>WhatsApp (com DDI+DDD)</label>
+        <input type="text" id="cfg-whatsapp" placeholder="Ex: 5591999999999">
+        <small style="color:#555;font-size:.75rem">DDI(55) + DDD + número. Sem espaços ou traços.</small>
+      </div>
+      <div class="form-group">
+        <label>Telefone (exibição)</label>
+        <input type="text" id="cfg-telefone" placeholder="Ex: (91) 99999-9999">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>E-mail</label>
+        <input type="email" id="cfg-email" placeholder="contato@empresa.com.br">
+      </div>
+      <div class="form-group">
+        <label>Horário de funcionamento</label>
+        <input type="text" id="cfg-horario" placeholder="Seg–Sex: 7h às 18h">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Endereço</label>
+      <input type="text" id="cfg-endereco" placeholder="Rua, número, bairro, cidade">
+    </div>
+    <button class="btn-salvar" onclick="salvarGrupo(['whatsapp','telefone','email','horario','endereco'])">
+      💾 Salvar contato
+    </button>
+  </div>
+
+  <!-- SEO -->
+  <div class="section-titulo">SEO / Aparência no Google</div>
+  <div style="background:var(--dark2);padding:2rem;margin-bottom:2rem;border-top:3px solid var(--yellow)">
+    <div class="form-group">
+      <label>Título da aba do navegador</label>
+      <input type="text" id="cfg-meta_title" placeholder="E.S Terraplenagem e Construções LTDA">
+    </div>
+    <div class="form-group">
+      <label>Descrição para o Google</label>
+      <input type="text" id="cfg-meta_desc" placeholder="Soluções em terraplenagem e construção civil">
+    </div>
+    <button class="btn-salvar" onclick="salvarGrupo(['meta_title','meta_desc'])">
+      💾 Salvar SEO
+    </button>
+  </div>
+
+  <!-- Estatísticas -->
+  <div class="section-titulo">Estatísticas do Hero</div>
+  <div style="background:var(--dark2);padding:2rem;margin-bottom:2rem;border-top:3px solid var(--yellow)">
+    <div class="form-row">
+      <div class="form-group">
+        <label>Anos de experiência</label>
+        <input type="number" id="cfg-anos_mercado" placeholder="10">
+        <small style="color:#555;font-size:.75rem">Aparece como "10+" no site</small>
+      </div>
+      <div class="form-group">
+        <label>Projetos concluídos</label>
+        <input type="number" id="cfg-projetos_concluidos" placeholder="200">
+        <small style="color:#555;font-size:.75rem">Aparece como "200+" no site</small>
+      </div>
+    </div>
+    <button class="btn-salvar" onclick="salvarGrupo(['anos_mercado','projetos_concluidos'])">
+      💾 Salvar estatísticas
+    </button>
+  </div>
+
+  <!-- Trocar senha -->
+  <div class="section-titulo">Segurança</div>
+  <div style="background:var(--dark2);padding:2rem;border-top:3px solid var(--yellow)">
+    <div class="form-row">
+      <div class="form-group">
+        <label>Senha atual</label>
+        <input type="password" id="senha-atual" placeholder="••••••••">
+      </div>
+      <div class="form-group">
+        <label>Nova senha</label>
+        <input type="password" id="senha-nova" placeholder="••••••••">
+      </div>
+    </div>
+    <button class="btn-salvar" onclick="trocarSenhaAdmin()">🔒 Alterar senha</button>
+  </div>
+</main>
+
+<script src="../assets/js/admin.js"></script>
+<script>
+  // ── CARREGAR CONFIGURAÇÕES ──
+  async function carregarConfigs() {
+    try {
+      const res = await fetch('/api/config');
+      const cfg = await res.json();
+      Object.entries(cfg).forEach(([chave, valor]) => {
+        const el = document.getElementById(`cfg-${chave}`);
+        if (el) el.value = valor || '';
+      });
+    } catch { toast('Erro ao carregar configurações', 'erro'); }
+  }
+
+  // ── SALVAR GRUPO ──
+  async function salvarGrupo(chaves) {
+    let erros = 0;
+    for (const chave of chaves) {
+      const el = document.getElementById(`cfg-${chave}`);
+      if (!el) continue;
+      try {
+        const res = await fetch(`/api/config/${chave}`, {
+          method: 'PUT', headers: authHeaders(),
+          body: JSON.stringify({ valor: el.value })
+        });
+        if (!res.ok) erros++;
+      } catch { erros++; }
+    }
+    if (erros === 0) toast('Configurações salvas com sucesso!');
+    else toast(`${erros} item(s) não foram salvos`, 'erro');
+  }
+
+  // ── TROCAR SENHA ──
+  async function trocarSenhaAdmin() {
+    const senhaAtual = document.getElementById('senha-atual').value;
+    const novaSenha  = document.getElementById('senha-nova').value;
+    if (!senhaAtual || !novaSenha) { toast('Preencha os dois campos', 'erro'); return; }
+    if (novaSenha.length < 6)     { toast('Nova senha deve ter pelo menos 6 caracteres', 'erro'); return; }
+    try {
+      const res = await fetch('/api/auth/trocar-senha', {
+        method: 'POST', headers: authHeaders(),
+        body: JSON.stringify({ senhaAtual, novaSenha })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        toast('Senha alterada com sucesso!');
+        document.getElementById('senha-atual').value = '';
+        document.getElementById('senha-nova').value  = '';
+      } else {
+        toast(data.erro || 'Erro ao alterar senha', 'erro');
+      }
+    } catch { toast('Erro de conexão', 'erro'); }
+  }
+
+  carregarConfigs();
+</script>
+</body>
+</html>
