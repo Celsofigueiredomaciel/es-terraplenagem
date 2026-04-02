@@ -12,3 +12,6 @@ backend/dist/
 # Sistema
 .DS_Store
 Thumbs.db
+backend/.env.save
+backend/ts-node-dev
+backend/es-terraplenagem-backend*
