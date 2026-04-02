@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Relatórios — E.S Terraplenagem</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/css/admin.css">
+  <style>
+    .filtros-box { background:var(--dark2); border-radius:10px; padding:20px; border:1px solid #333; margin-bottom:24px; }
+    .filtros-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(180px,1fr)); gap:14px; margin-bottom:16px; }
+    .filtro-grupo label { display:block; font-size:.75rem; color:#aaa; font-weight:600; text-transform:uppercase; margin-bottom:5px; }
+    .filtro-grupo input, .filtro-grupo select { width:100%; padding:9px 12px; background:#111; border:1px solid #333; border-radius:6px; color:#fff; font-size:.88rem; }
+    .filtros-acoes { display:flex; gap:10px; flex-wrap:wrap; }
+    .btn-filtrar { background:var(--yellow); color:#000; padding:9px 20px; border:none; border-radius:6px; font-weight:700; cursor:pointer; }
+    .btn-limpar  { background:#333; color:#fff; padding:9px 16px; border:none; border-radius:6px; cursor:pointer; }
+    .btn-imprimir { background:#1a7a3c; color:#fff; padding:9px 20px; border:none; border-radius:6px; font-weight:700; cursor:pointer; margin-left:auto; }
+    .totais-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(130px,1fr)); gap:12px; margin-bottom:24px; }
+    .total-card { background:var(--dark2); border-radius:8px; padding:14px; text-align:center; border:1px solid #333; }
+    .total-num  { font-size:2rem; font-weight:700; }
+    .total-label { font-size:.75rem; color:#888; text-transform:uppercase; margin-top:4px; }
+    .t-total      { color:#FFD700; }
+    .t-novo       { color:#3a7bd5; }
+    .t-em_analise { color:#e67e22; }
+    .t-respondido { color:#1a7a3c; }
+    .t-cancelado  { color:#c0392b; }
+    .tabela-box { background:var(--dark2); border-radius:10px; border:1px solid #333; overflow:hidden; }
+    .tabela-header { padding:16px 20px; border-bottom:1px solid #333; display:flex; justify-content:space-between; align-items:center; }
+    .tabela-titulo { font-weight:700; font-size:1rem; }
+    .tabela-count  { font-size:.85rem; color:#888; }
+    table { width:100%; border-collapse:collapse; }
+    thead th { padding:10px 16px; text-align:left; font-size:.75rem; color:#888; text-transform:uppercase; border-bottom:1px solid #333; }
+    tbody td { padding:12px 16px; font-size:.85rem; border-bottom:1px solid #222; vertical-align:top; }
+    tbody tr:last-child td { border-bottom:none; }
+    tbody tr:hover { background:rgba(255,255,255,.03); }
+    .badge-status { padding:3px 10px; border-radius:20px; font-size:.72rem; font-weight:600; white-space:nowrap; }
+    .s-novo       { background:#1a3a6a; color:#7ab3f5; }
+    .s-em_analise { background:#4a2e0a; color:#f0a050; }
+    .s-respondido { background:#0a3a1a; color:#50c878; }
+    .s-cancelado  { background:#3a0a0a; color:#f07070; }
+    .sem-dados { padding:40px; text-align:center; color:#555; }
+    @media print {
+      .sidebar, .filtros-acoes, .btn-imprimir, .page-titulo { display:none !important; }
+      .main-content { margin-left:0 !important; padding:0 !important; }
+      body { background:#fff !important; color:#000 !important; }
+      .filtros-box { display:none !important; }
+      .totais-grid { display:grid !important; }
+      .total-card { border:1px solid #ccc !important; background:#f9f9f9 !important; }
+      .total-num, .total-label { color:#000 !important; }
+      table { font-size:.8rem; }
+      thead th, tbody td { border-color:#ccc !important; color:#000 !important; }
+      .tabela-box { border:1px solid #ccc !important; background:#fff !important; }
+      .badge-status { border:1px solid #999 !important; background:#eee !important; color:#000 !important; }
+      .print-header { display:block !important; }
+    }
+    .print-header { display:none; margin-bottom:20px; }
+    .print-header h2 { font-size:1.3rem; margin:0 0 4px; }
+    .print-header p  { font-size:.85rem; color:#555; margin:0; }
+  </style>
+</head>
+<body>
+<div id="toast-global"></div>
+<aside class="sidebar">
+  <div class="sidebar-logo">E.S Admin</div>
+  <nav>
+    <a href="historia.html"      class="nav-item">📖 Nossa História</a>
+    <a href="dashboard.html"     class="nav-item">📊 Dashboard</a>
+    <a href="midias.html"        class="nav-item">📷 Fotos & Vídeos</a>
+    <a href="produtos.html"      class="nav-item">📦 Produtos</a>
+    <a href="orcamentos.html"    class="nav-item">📋 Orçamentos</a>
+    <a href="blog-admin.html"    class="nav-item">📝 Blog</a>
+    <a href="configuracoes.html" class="nav-item">⚙️ Configurações</a>
+    <a href="usuarios.html"      class="nav-item">👥 Usuários</a>
+    <a href="relatorios.html"    class="nav-item ativo">📊 Relatórios</a>
+  </nav>
+  <div class="sidebar-footer">
+    <span id="sidebar-nome">—</span>
+    <button onclick="sair()" class="btn-sair">Sair</button>
+  </div>
+</aside>
+
+<main class="main-content">
+  <div class="print-header">
+    <h2>E.S Terraplenagem — Relatório de Orçamentos</h2>
+    <p id="print-periodo">—</p>
+  </div>
+
+  <h1 class="page-titulo">Relatórios</h1>
+
+  <!-- Filtros -->
+  <div class="filtros-box">
+    <div class="filtros-grid">
+      <div class="filtro-grupo">
+        <label>Data início</label>
+        <input type="date" id="f-inicio">
+      </div>
+      <div class="filtro-grupo">
+        <label>Data fim</label>
+        <input type="date" id="f-fim">
+      </div>
+      <div class="filtro-grupo">
+        <label>Status</label>
+        <select id="f-status">
+          <option value="">Todos</option>
+          <option value="novo">Novo</option>
+          <option value="em_analise">Em análise</option>
+          <option value="respondido">Respondido</option>
+          <option value="cancelado">Cancelado</option>
+        </select>
+      </div>
+      <div class="filtro-grupo">
+        <label>Serviço</label>
+        <select id="f-servico">
+          <option value="">Todos</option>
+          <option value="terraplenagem">Terraplenagem</option>
+          <option value="construcao">Construção</option>
+          <option value="estradas">Estradas</option>
+        </select>
+      </div>
+    </div>
+    <div class="filtros-acoes">
+      <button class="btn-filtrar" onclick="gerarRelatorio()">Gerar Relatório</button>
+      <button class="btn-limpar"  onclick="limparFiltros()">Limpar</button>
+      <button class="btn-imprimir" onclick="imprimir()">🖨️ Imprimir / PDF</button>
+    </div>
+  </div>
+
+  <!-- Totais -->
+  <div class="totais-grid" id="totais-grid" style="display:none">
+    <div class="total-card">
+      <div class="total-num t-total"  id="t-total">0</div>
+      <div class="total-label">Total</div>
+    </div>
+    <div class="total-card">
+      <div class="total-num t-novo"       id="t-novo">0</div>
+      <div class="total-label">Novos</div>
+    </div>
+    <div class="total-card">
+      <div class="total-num t-em_analise" id="t-em_analise">0</div>
+      <div class="total-label">Em análise</div>
+    </div>
+    <div class="total-card">
+      <div class="total-num t-respondido" id="t-respondido">0</div>
+      <div class="total-label">Respondidos</div>
+    </div>
+    <div class="total-card">
+      <div class="total-num t-cancelado"  id="t-cancelado">0</div>
+      <div class="total-label">Cancelados</div>
+    </div>
+  </div>
+
+  <!-- Tabela -->
+  <div class="tabela-box" id="tabela-box" style="display:none">
+    <div class="tabela-header">
+      <span class="tabela-titulo">Orçamentos</span>
+      <span class="tabela-count" id="tabela-count">0 registros</span>
+    </div>
+    <div style="overflow-x:auto">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Nome</th>
+            <th>Telefone</th>
+            <th>Serviço</th>
+            <th>Status</th>
+            <th>Data</th>
+            <th>Respondido em</th>
+          </tr>
+        </thead>
+        <tbody id="tabela-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div id="sem-dados" class="sem-dados" style="display:none">
+    Nenhum orçamento encontrado para os filtros selecionados.
+  </div>
+</main>
+
+<script src="../assets/js/admin.js"></script>
+<script>
+function formatarData(d) {
+  if (!d) return '—';
+  return new Date(d).toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit', year:'numeric' });
+}
+
+function badgeStatus(s) {
+  const labels = { novo:'Novo', em_analise:'Em análise', respondido:'Respondido', cancelado:'Cancelado' };
+  return `<span class="badge-status s-${s}">${labels[s] || s}</span>`;
+}
+
+async function gerarRelatorio() {
+  const inicio  = document.getElementById('f-inicio').value;
+  const fim     = document.getElementById('f-fim').value;
+  const status  = document.getElementById('f-status').value;
+  const servico = document.getElementById('f-servico').value;
+
+  const params = new URLSearchParams();
+  if (inicio)  params.append('dataInicio', inicio);
+  if (fim)     params.append('dataFim', fim);
+  if (status)  params.append('status', status);
+  if (servico) params.append('servico', servico);
+
+  try {
+    const res  = await fetch(`/api/orcamentos/relatorio?${params}`, { headers: authHeaders() });
+    const data = await res.json();
+    if (!res.ok) { toast(data.erro, 'erro'); return; }
+
+    // Atualiza totais
+    document.getElementById('totais-grid').style.display = 'grid';
+    document.getElementById('t-total').textContent      = data.totais.total;
+    document.getElementById('t-novo').textContent       = data.totais.novo;
+    document.getElementById('t-em_analise').textContent = data.totais.em_analise;
+    document.getElementById('t-respondido').textContent = data.totais.respondido;
+    document.getElementById('t-cancelado').textContent  = data.totais.cancelado;
+
+    // Atualiza tabela
+    const tbody = document.getElementById('tabela-body');
+    document.getElementById('tabela-count').textContent = `${data.dados.length} registro(s)`;
+
+    if (data.dados.length === 0) {
+      document.getElementById('tabela-box').style.display = 'none';
+      document.getElementById('sem-dados').style.display  = 'block';
+    } else {
+      document.getElementById('tabela-box').style.display = 'block';
+      document.getElementById('sem-dados').style.display  = 'none';
+      tbody.innerHTML = data.dados.map((o, i) => `
+        <tr>
+          <td style="color:#555">${i + 1}</td>
+          <td><div style="font-weight:600">${o.nome}</div><div style="font-size:.75rem;color:#888">${o.email || '—'}</div></td>
+          <td>${o.telefone}</td>
+          <td style="text-transform:capitalize">${o.servico}</td>
+          <td>${badgeStatus(o.status)}</td>
+          <td>${formatarData(o.criado_em)}</td>
+          <td>${formatarData(o.respondido_em)}</td>
+        </tr>`).join('');
+    }
+
+    // Atualiza cabeçalho para impressão
+    const periodo = inicio && fim
+      ? `Período: ${formatarData(inicio)} a ${formatarData(fim)}`
+      : inicio ? `A partir de ${formatarData(inicio)}`
+      : fim    ? `Até ${formatarData(fim)}`
+      : 'Todos os registros';
+    document.getElementById('print-periodo').textContent =
+      `${periodo} — Gerado em ${new Date().toLocaleDateString('pt-BR')}`;
+
+  } catch {
+    toast('Erro ao gerar relatório', 'erro');
+  }
+}
+
+function limparFiltros() {
+  document.getElementById('f-inicio').value  = '';
+  document.getElementById('f-fim').value     = '';
+  document.getElementById('f-status').value  = '';
+  document.getElementById('f-servico').value = '';
+  document.getElementById('totais-grid').style.display = 'none';
+  document.getElementById('tabela-box').style.display  = 'none';
+  document.getElementById('sem-dados').style.display   = 'none';
+}
+
+function imprimir() {
+  if (document.getElementById('tabela-box').style.display === 'none' &&
+      document.getElementById('sem-dados').style.display  === 'none') {
+    toast('Gere o relatório antes de imprimir', 'erro');
+    return;
+  }
+  window.print();
+}
+
+// Carrega relatório geral ao abrir
+gerarRelatorio();
+</script>
+</body>
+</html>

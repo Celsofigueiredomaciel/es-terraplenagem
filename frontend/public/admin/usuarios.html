@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Usuários — E.S Terraplenagem</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/css/admin.css">
+  <style>
+    .usuarios-grid { display:grid; gap:16px; margin-top:20px; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); }
+    .usuario-card { min-height: 100px; box-sizing: border-box; background:var(--dark2); border-radius:10px; padding:20px; border:1px solid #333; }
+    .usuario-header { gap: 12px;flex-wrap: wrap;display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px; }
+    .usuario-nome { word-break: break-word;font-size:1.1rem;  white-space: normal; font-weight:600; }
+    .usuario-email { font-size:.85rem; color:#888; margin-top:2px; }
+    .usuario-info { display:flex; gap:10px; align-items:center; margin-bottom:14px; flex-wrap:wrap; }
+    .badge-role { padding:3px 10px; border-radius:20px; font-size:.75rem; font-weight:600; }
+    .badge-admin { background:#FFD700; color:#000; }
+    .badge-secretaria { background:#3a7bd5; color:#fff; }
+    .badge-ativo { background:#1a7a3c; color:#fff; padding:3px 10px; border-radius:20px; font-size:.75rem; }
+    .badge-inativo { background:#7a1a1a; color:#fff; padding:3px 10px; border-radius:20px; font-size:.75rem; }
+    .permissoes-lista { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:14px; }
+    .perm-tag { background:#222; border:1px solid #444; border-radius:6px; padding:2px 8px; font-size:.75rem; color:#aaa; }
+    .usuario-acoes { display:flex; gap:8px; flex-wrap:wrap; }
+    .btn-sm { padding:6px 14px; border-radius:6px; border:none; cursor:pointer; font-size:.8rem; font-weight:600; transition:.2s; }
+    .btn-editar { background:#FFD700; color:#000; }
+    .btn-inativar { background:#c0392b; color:#fff; }
+    .btn-ativar { background:#1a7a3c; color:#fff; }
+    .btn-senha { background:#333; color:#fff; border:1px solid #555; }
+    .usuario-protegido { border-color:#FFD700; }
+    .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.7); z-index:1000; align-items:center; justify-content:center; }
+    .modal-overlay.aberto { display:flex; }
+    .modal-box { background:#1a1a1a; border-radius:12px; padding:28px; width:90%; max-width:520px; border:1px solid #333; }
+    .modal-titulo { font-size:1.2rem; font-weight:700; margin-bottom:20px; color:var(--yellow); }
+    .form-row { margin-bottom:14px; }
+    .form-row label { display:block; font-size:.8rem; color:#aaa; margin-bottom:5px; font-weight:600; text-transform:uppercase; }
+    .form-row input, .form-row select { width:100%; padding:10px; background:#111; border:1px solid #333; border-radius:6px; color:#fff; font-size:.9rem; }
+    .perms-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:8px; }
+    .perm-check { display:flex; align-items:center; gap:8px; font-size:.85rem; cursor:pointer; }
+    .perm-check input { width:16px; height:16px; cursor:pointer; }
+    .modal-acoes { display:flex; gap:10px; margin-top:20px; justify-content:flex-end; }
+    .btn-salvar { background:#FFD700; color:#000; padding:10px 24px; border:none; border-radius:6px; font-weight:700; cursor:pointer; }
+    .btn-cancelar { background:#333; color:#fff; padding:10px 24px; border:none; border-radius:6px; cursor:pointer; }
+    .btn-novo { background:var(--yellow); color:#000; padding:10px 20px; border:none; border-radius:8px; font-weight:700; cursor:pointer; font-size:.9rem; }
+  </style>
+</head>
+<body>
+<div id="toast-global"></div>
+<aside class="sidebar">
+  <div class="sidebar-logo">E.S Admin</div>
+  <nav>
+    <a href="historia.html"       class="nav-item">📖 Nossa História</a>
+    <a href="dashboard.html"      class="nav-item">📊 Dashboard</a>
+    <a href="midias.html"         class="nav-item">📷 Fotos & Vídeos</a>
+    <a href="produtos.html"       class="nav-item">📦 Produtos</a>
+    <a href="orcamentos.html"     class="nav-item">📋 Orçamentos</a>
+    <a href="blog-admin.html"     class="nav-item">📝 Blog</a>
+    <a href="configuracoes.html"  class="nav-item">⚙️ Configurações</a>
+    <a href="usuarios.html"       class="nav-item ativo">👥 Usuários</a>
+    <a href="relatorios.html"     class="nav-item">📊 Relatórios</a>
+  </nav>
+  <div class="sidebar-footer">
+    <span id="sidebar-nome">—</span>
+    <button onclick="sair()" class="btn-sair">Sair</button>
+  </div>
+</aside>
+<main class="main-content">
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+    <h1 class="page-titulo">Usuários</h1>
+    <button class="btn-novo" onclick="abrirModalNovo()">+ Novo Usuário</button>
+  </div>
+  <p style="color:#888; font-size:.85rem; margin-bottom:4px;">Gerencie os usuários do painel administrativo.</p>
+  <div class="usuarios-grid" id="lista-usuarios">
+    <p style="color:#555;">Carregando...</p>
+  </div>
+</main>
+
+<!-- Modal criar/editar -->
+<div class="modal-overlay" id="modal-usuario">
+  <div class="modal-box">
+    <div class="modal-titulo" id="modal-titulo">Novo Usuário</div>
+    <input type="hidden" id="usuario-id">
+    <div class="form-row">
+      <label>Nome completo</label>
+      <input type="text" id="u-nome" placeholder="Ex: Maria Silva">
+    </div>
+    <div class="form-row">
+      <label>E-mail</label>
+      <input type="email" id="u-email" placeholder="maria@empresa.com.br">
+    </div>
+    <div class="form-row" id="row-senha">
+      <label>Senha inicial</label>
+      <input type="password" id="u-senha" placeholder="Mínimo 8 caracteres">
+    </div>
+    <div class="form-row">
+      <label>Nível de acesso</label>
+      <select id="u-role" onchange="togglePermissoes()">
+        <option value="secretaria">Secretaria</option>
+        <option value="admin">Administrador</option>
+      </select>
+    </div>
+    <div class="form-row" id="row-permissoes">
+      <label>Permissões delegadas</label>
+      <div class="perms-grid">
+        <label class="perm-check"><input type="checkbox" value="blog"> Blog</label>
+        <label class="perm-check"><input type="checkbox" value="midias"> Fotos & Vídeos</label>
+        <label class="perm-check"><input type="checkbox" value="produtos"> Produtos</label>
+        <label class="perm-check"><input type="checkbox" value="historia"> Nossa História</label>
+        <label class="perm-check"><input type="checkbox" value="orcamentos_ver"> Ver Orçamentos</label>
+        <label class="perm-check"><input type="checkbox" value="orcamentos_responder"> Responder Orçamentos</label>
+        <label class="perm-check"><input type="checkbox" value="relatorios"> Relatórios</label>
+      </div>
+    </div>
+    <div class="modal-acoes">
+      <button class="btn-cancelar" onclick="fecharModal()">Cancelar</button>
+      <button class="btn-salvar" onclick="salvarUsuario()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal resetar senha -->
+<div class="modal-overlay" id="modal-senha">
+  <div class="modal-box" style="max-width:380px">
+    <div class="modal-titulo">Resetar Senha</div>
+    <input type="hidden" id="reset-id">
+    <div class="form-row">
+      <label>Nova senha</label>
+      <input type="password" id="reset-senha" placeholder="Mínimo 8 caracteres">
+    </div>
+    <div class="modal-acoes">
+      <button class="btn-cancelar" onclick="fecharModalSenha()">Cancelar</button>
+      <button class="btn-salvar" onclick="confirmarResetSenha()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/admin.js"></script>
+<script>
+const PERMS_LABELS = {
+  blog: 'Blog', midias: 'Fotos & Vídeos', produtos: 'Produtos',
+  historia: 'Nossa História', orcamentos_ver: 'Ver Orçamentos',
+  orcamentos_responder: 'Responder Orçamentos', relatorios: 'Relatórios'
+};
+
+async function carregarUsuarios() {
+  const res  = await fetch('/api/usuarios', { headers: authHeaders() });
+  const data = await res.json();
+  const el   = document.getElementById('lista-usuarios');
+  if (!data.length) { el.innerHTML = '<p style="color:#555">Nenhum usuário cadastrado.</p>'; return; }
+  el.innerHTML = data.map(u => {
+    const perms = (u.permissoes || []).map(p =>
+      `<span class="perm-tag">${PERMS_LABELS[p] || p}</span>`).join('');
+    const protegido = u.id === 1 ? 'usuario-protegido' : '';
+    const badgeRole = u.role === 'admin'
+      ? '<span class="badge-role badge-admin">Admin</span>'
+      : '<span class="badge-role badge-secretaria">Secretaria</span>';
+    const badgeAtivo = u.ativo
+      ? '<span class="badge-ativo">Ativo</span>'
+      : '<span class="badge-inativo">Inativo</span>';
+    const btnStatus = u.id === 1 ? '' : u.ativo
+      ? `<button class="btn-sm btn-inativar" onclick="alterarStatus(${u.id}, false)">Inativar</button>`
+      : `<button class="btn-sm btn-ativar"   onclick="alterarStatus(${u.id}, true)">Ativar</button>`;
+    const btnEditar = u.id === 1 ? '' :
+      `<button class="btn-sm btn-editar" onclick='abrirModalEditar(${JSON.stringify(u)})'>Editar</button>`;
+    const btnSenha = u.id === 1 ? '' :
+      `<button class="btn-sm btn-senha" onclick="abrirModalSenha(${u.id})">Resetar Senha</button>`;
+    return `
+      <div class="usuario-card ${protegido}">
+        <div class="usuario-header">
+          <div>
+            <div class="usuario-nome">${u.nome} ${u.id === 1 ? '🔒' : ''}</div>
+            <div class="usuario-email">${u.email}</div>
+          </div>
+          <div style="display:flex;gap:6px">${badgeRole} ${badgeAtivo}</div>
+        </div>
+        ${perms ? `<div class="permissoes-lista">${perms}</div>` : ''}
+        <div class="usuario-acoes">${btnEditar}${btnStatus}${btnSenha}</div>
+      </div>`;
+  }).join('');
+}
+
+function togglePermissoes() {
+  const role = document.getElementById('u-role').value;
+  document.getElementById('row-permissoes').style.display = role === 'admin' ? 'none' : 'block';
+}
+
+function abrirModalNovo() {
+  document.getElementById('modal-titulo').textContent = 'Novo Usuário';
+  document.getElementById('usuario-id').value = '';
+  document.getElementById('u-nome').value = '';
+  document.getElementById('u-email').value = '';
+  document.getElementById('u-senha').value = '';
+  document.getElementById('u-role').value = 'secretaria';
+  document.getElementById('row-senha').style.display = 'block';
+  document.querySelectorAll('.perms-grid input').forEach(c => c.checked = false);
+  togglePermissoes();
+  document.getElementById('modal-usuario').classList.add('aberto');
+}
+
+function abrirModalEditar(u) {
+  document.getElementById('modal-titulo').textContent = 'Editar Usuário';
+  document.getElementById('usuario-id').value = u.id;
+  document.getElementById('u-nome').value = u.nome;
+  document.getElementById('u-email').value = u.email;
+  document.getElementById('u-role').value = u.role;
+  document.getElementById('row-senha').style.display = 'none';
+  const perms = u.permissoes || [];
+  document.querySelectorAll('.perms-grid input').forEach(c => {
+    c.checked = perms.includes(c.value);
+  });
+  togglePermissoes();
+  document.getElementById('modal-usuario').classList.add('aberto');
+}
+
+function fecharModal() {
+  document.getElementById('modal-usuario').classList.remove('aberto');
+}
+
+async function salvarUsuario() {
+  const id     = document.getElementById('usuario-id').value;
+  const nome   = document.getElementById('u-nome').value.trim();
+  const email  = document.getElementById('u-email').value.trim();
+  const senha  = document.getElementById('u-senha').value;
+  const role   = document.getElementById('u-role').value;
+  const perms  = [...document.querySelectorAll('.perms-grid input:checked')].map(c => c.value);
+  if (!nome || !email) { toast('Preencha nome e e-mail', 'erro'); return; }
+  if (!id && senha.length < 8) { toast('Senha deve ter ao menos 8 caracteres', 'erro'); return; }
+  const body = id
+    ? { nome, email, role, permissoes: perms }
+    : { nome, email, senha, role, permissoes: perms };
+  const res = await fetch(`/api/usuarios${id ? '/'+id : ''}`, {
+    method: id ? 'PUT' : 'POST',
+    headers: authHeaders(),
+    body: JSON.stringify(body)
+  });
+  const data = await res.json();
+  if (res.ok) { toast(data.mensagem, 'ok'); fecharModal(); carregarUsuarios(); }
+  else { toast(data.erro, 'erro'); }
+}
+
+async function alterarStatus(id, ativo) {
+  const acao = ativo ? 'ativar' : 'inativar';
+  if (!confirm(`Deseja ${acao} este usuário?`)) return;
+  const res  = await fetch(`/api/usuarios/${id}/status`, {
+    method: 'PATCH', headers: authHeaders(),
+    body: JSON.stringify({ ativo })
+  });
+  const data = await res.json();
+  if (res.ok) { toast(data.mensagem, 'ok'); carregarUsuarios(); }
+  else { toast(data.erro, 'erro'); }
+}
+
+function abrirModalSenha(id) {
+  document.getElementById('reset-id').value = id;
+  document.getElementById('reset-senha').value = '';
+  document.getElementById('modal-senha').classList.add('aberto');
+}
+function fecharModalSenha() {
+  document.getElementById('modal-senha').classList.remove('aberto');
+}
+async function confirmarResetSenha() {
+  const id    = document.getElementById('reset-id').value;
+  const senha = document.getElementById('reset-senha').value;
+  if (senha.length < 8) { toast('Senha deve ter ao menos 8 caracteres', 'erro'); return; }
+  const res  = await fetch(`/api/usuarios/${id}/senha`, {
+    method: 'PATCH', headers: authHeaders(),
+    body: JSON.stringify({ novaSenha: senha })
+  });
+  const data = await res.json();
+  if (res.ok) { toast(data.mensagem, 'ok'); fecharModalSenha(); }
+  else { toast(data.erro, 'erro'); }
+}
+
+carregarUsuarios();
+</script>
+</body>
+</html>

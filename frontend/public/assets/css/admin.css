@@ -134,3 +134,5 @@ input, textarea, select, button { font-family:'Barlow',sans-serif; }
   .admin-main { margin-left:0; padding:1rem; }
   .form-row { grid-template-columns:1fr; }
 }
+.main-content { flex:1; margin-left:var(--sidebar-w); padding:2rem; min-height:100vh; box-sizing:border-box; }
+

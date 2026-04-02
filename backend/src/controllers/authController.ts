@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken';
 import pool from '../config/db';
 import { AuthRequest } from '../middleware/auth';
 
+// ── Login ────────────────────────────────────────────
 export async function login(req: Request, res: Response): Promise<void> {
   const { email, senha } = req.body;
   if (!email || !senha) {
@@ -27,11 +28,15 @@ export async function login(req: Request, res: Response): Promise<void> {
     await pool.query(
       'UPDATE usuarios SET ultimo_login = NOW() WHERE id = ?', [usuario.id]
     );
-    const token = jwt.sign(
-      { id: usuario.id, email: usuario.email, role: usuario.role },
-      process.env.JWT_SECRET as string,
-      { expiresIn: process.env.JWT_EXPIRES_IN || '8h' }
-    );
+    const secret = process.env.JWT_SECRET!;
+const expiresIn = (process.env.JWT_EXPIRES_IN || '8h') as jwt.SignOptions['expiresIn'];
+
+const token = jwt.sign(
+  { id: usuario.id, email: usuario.email, role: usuario.role },
+  secret,
+  { expiresIn }
+);
+    
     res.json({
       token,
       usuario: {
@@ -47,8 +52,15 @@ export async function login(req: Request, res: Response): Promise<void> {
   }
 }
 
+// ── Trocar senha ─────────────────────────────────────
 export async function trocarSenha(req: AuthRequest, res: Response): Promise<void> {
   const { senhaAtual, novaSenha } = req.body;
+
+  if (!novaSenha || novaSenha.length < 8) {
+    res.status(400).json({ erro: 'A nova senha deve ter ao menos 8 caracteres' });
+    return;
+  }
+
   try {
     const [rows]: any = await pool.query(
       'SELECT senha_hash FROM usuarios WHERE id = ?', [req.usuario?.id]
@@ -63,11 +75,12 @@ export async function trocarSenha(req: AuthRequest, res: Response): Promise<void
       'UPDATE usuarios SET senha_hash = ? WHERE id = ?', [hash, req.usuario?.id]
     );
     res.json({ mensagem: 'Senha atualizada com sucesso' });
-  } catch {
+  } catch (err) {
+    console.error('ERRO TROCAR SENHA:', err);
     res.status(500).json({ erro: 'Erro interno' });
   }
 }
-
+// ── Perfil ───────────────────────────────────────────
 export async function perfil(req: AuthRequest, res: Response): Promise<void> {
   try {
     const [rows]: any = await pool.query(
