@@ -588,5 +588,26 @@
 </script>
 
 <script src="assets/js/main.js"></script>
+<!-- BANNER LGPD -->
+<div id="cookie-banner" class="cookie-banner">
+  <div class="cookie-texto">
+    🍪 Este site utiliza cookies para melhorar sua experiência. Os dados coletados no formulário de orçamento são tratados conforme a
+    <a href="/politica-privacidade.html">Política de Privacidade</a> — <strong>Lei nº 13.709/2018 (LGPD)</strong>.
+  </div>
+  <div class="cookie-acoes">
+    <button onclick="aceitarCookies()" class="btn-aceitar">Aceitar</button>
+    <a href="/politica-privacidade.html" class="btn-saber-mais">Saiba mais</a>
+  </div>
+</div>
+
+<script>
+function aceitarCookies() {
+  localStorage.setItem("cookies_aceitos", "sim");
+  document.getElementById("cookie-banner").style.display = "none";
+}
+if (localStorage.getItem("cookies_aceitos") === "sim") {
+  document.getElementById("cookie-banner").style.display = "none";
+}
+</script>
 </body>
 </html>

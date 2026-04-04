@@ -270,3 +270,78 @@ footer { background: var(--dark); border-top: 1px solid rgba(255,255,255,.05); p
   object-fit: cover !important;
   display: block !important;
 }
+/* ── LOGO DESENVOLVEDOR ── */
+.footer-dev {
+  margin-top: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-size: .72rem;
+  color: #555;
+}
+.footer-dev a { opacity: .6; transition: opacity .3s; }
+.footer-dev a:hover { opacity: 1; }
+.logo-dev {
+  height: 58px;
+  width: 58px;
+  object-fit: cover;
+  border-radius: 16px;
+  filter: grayscale(40%);
+  transition: filter .3s;
+}
+.logo-dev:hover { filter: grayscale(0%); }
+
+/* ── RODAPÉ LGPD ── */
+.footer-copy {
+  font-size: .75rem;
+  color: #555;
+  text-align: center;
+  line-height: 1.8;
+}
+.footer-sep { margin: 0 8px; color: #333; }
+.footer-lgpd { color: var(--yellow); text-decoration: none; }
+.footer-lgpd:hover { text-decoration: underline; }
+
+/* ── BANNER COOKIES ── */
+.cookie-banner {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #111;
+  border-top: 2px solid var(--yellow);
+  padding: 16px 5%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  z-index: 9999;
+  flex-wrap: wrap;
+}
+.cookie-texto {
+  font-size: .85rem;
+  color: #aaa;
+  flex: 1;
+  min-width: 250px;
+}
+.cookie-texto a { color: var(--yellow); }
+.cookie-texto strong { color: #ddd; }
+.cookie-acoes { display: flex; gap: 10px; align-items: center; }
+.btn-aceitar {
+  background: var(--yellow);
+  color: #000;
+  border: none;
+  padding: 10px 24px;
+  border-radius: 6px;
+  font-weight: 700;
+  cursor: pointer;
+  font-size: .85rem;
+}
+.btn-aceitar:hover { opacity: .85; }
+.btn-saber-mais {
+  color: #888;
+  font-size: .8rem;
+  text-decoration: none;
+}
+.btn-saber-mais:hover { color: #ddd; }
