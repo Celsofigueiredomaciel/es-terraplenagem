@@ -384,7 +384,15 @@
     <li><a href="#contato">Contato</a></li>
     <li><a href="/admin/login.html">Admin</a></li>
   </ul>
-  <div class="footer-copy">© 2026 E.S Terraplenagem e Construções LTDA. Todos os direitos reservados.</div>
+  <div class="footer-copy">
+  © 2026 E S Terraplenagem e Construcao Ltda — CNPJ: 18.038.609/0001-15
+  <span class="footer-sep">|</span>
+  Rua Diamante, 106, Quarenta Horas, Ananindeua/PA — CEP: 67.120-593
+  <span class="footer-sep">|</span>
+  <a href="/politica-privacidade.html" class="footer-lgpd">Política de Privacidade</a>
+  <span class="footer-sep">|</span>
+  Em conformidade com a LGPD — Lei nº 13.709/2018
+</div>
   <div class="footer-dev">
     <span>Desenvolvido por</span>
     <a href="https://github.com/Celsofigueiredomaciel" target="_blank" title="Celso Maciel - Desenvolvedor">
@@ -609,5 +617,14 @@ if (localStorage.getItem("cookies_aceitos") === "sim") {
   document.getElementById("cookie-banner").style.display = "none";
 }
 </script>
+<!-- VLibras - Acessibilidade Libras -->
+<div vw class="enabled">
+  <div vw-access-button class="active"></div>
+  <div vw-plugin-wrapper>
+    <div class="vw-plugin-top-wrapper"></div>
+  </div>
+</div>
+<script src="https://vlibras.gov.br/app/vlibras-plugin.js"></script>
+<script>new window.VLibras.Widget("https://vlibras.gov.br/app");</script>
 </body>
 </html>
