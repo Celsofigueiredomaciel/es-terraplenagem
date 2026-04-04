@@ -23,7 +23,7 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc:    ["'self'"],
-      scriptSrc:     ["'self'", "'unsafe-inline'"],
+      scriptSrc:     ["'self'", "'unsafe-inline'", "https://vlibras.gov.br", "https://central.vlibras.gov.br", "https://cdn.jsdelivr.net", "https://spbgovbr-vlibras.github.io"],
       scriptSrcAttr: ["'unsafe-inline'"],              // ✅ libera onclick= no HTML
       styleSrc:      ["'self'", "'unsafe-inline'",
                      "https://fonts.googleapis.com"],
