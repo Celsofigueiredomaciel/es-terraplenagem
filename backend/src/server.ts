@@ -23,13 +23,15 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc:    ["'self'"],
-      scriptSrc:     ["'self'", "'unsafe-inline'", "https://vlibras.gov.br", "https://central.vlibras.gov.br", "https://cdn.jsdelivr.net", "https://spbgovbr-vlibras.github.io"],
-      scriptSrcAttr: ["'unsafe-inline'"],              // ✅ libera onclick= no HTML
-      styleSrc:      ["'self'", "'unsafe-inline'",
-                     "https://fonts.googleapis.com"],
+      scriptSrc:     ["'self'", "'unsafe-inline'", "https://vlibras.gov.br", "https://*.vlibras.gov.br", "https://cdn.jsdelivr.net", "https://spbgovbr-vlibras.github.io"],
+      scriptSrcAttr: ["'unsafe-inline'"],
+      styleSrc:      ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
       fontSrc:       ["'self'", "https://fonts.gstatic.com"],
-      imgSrc:        ["'self'", "data:", "blob:"],
-      connectSrc:    ["'self'"],
+      imgSrc:        ["'self'", "data:", "blob:", "https://vlibras.gov.br", "https://*.vlibras.gov.br", "https://spbgovbr-vlibras.github.io", "https://cdn.jsdelivr.net",],
+      connectSrc:    ["'self'", "https://vlibras.gov.br", "https://*.vlibras.gov.br"],
+      frameSrc:      ["'self'", "https://vlibras.gov.br", "https://*.vlibras.gov.br"],
+      workerSrc:     ["'self'", "blob:", "https://vlibras.gov.br", "https://*.vlibras.gov.br"],
+    
     }
   }
 }));
